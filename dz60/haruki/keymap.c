@@ -1,0 +1,192 @@
+#include QMK_KEYBOARD_H
+//#include "dz60.h"
+#include "action_layer.h"
+#include "../../../quantum/keymap_extras/keymap_german.h"
+
+#define MODS_CTRL_MASK  (MOD_BIT(KC_LSHIFT)|MOD_BIT(KC_RSHIFT))
+#define _______ KC_TRNS
+
+#define KM_QWERTY  0
+#define GAMING     1
+#define LAYER1     2
+#define LAYER2     3
+#define MISC1      4
+#define MISC2      5
+#define F_ROW	   6
+
+//Tap Dance Declarations
+enum {
+  TD_COMM_EQL = 0,
+  TD_CAPS = 1,
+  TD_END = 2
+};
+
+
+
+
+/*capslock tap dance */
+
+enum {
+  SINGLE_TAP = 1,
+  SINGLE_HOLD = 2,
+  DOUBLE_HOLD = 4,
+  TRIPLE_HOLD = 6,
+  QUAD_HOLD = 8
+};
+
+typedef struct {
+  bool is_press_action;
+  int state;
+} tap;
+
+int cur_dance (tap_dance_state_t *state) {
+  if (state->count == 1) {
+    if (state->interrupted || state->pressed==0) return SINGLE_TAP;
+    else return SINGLE_HOLD;
+  }
+  else if (state->count == 2) {
+    if (state->pressed) return DOUBLE_HOLD;
+    else return SINGLE_TAP;
+  }
+  else if (state->count == 3) {
+    if (state->pressed) return TRIPLE_HOLD;
+    else return SINGLE_TAP;
+  }
+  else if (state->count == 4) {
+    if (state->pressed) return QUAD_HOLD;
+    else return SINGLE_TAP;
+  }
+  else return 10; //magic number. At some point this method will expand to work for more presses
+}
+
+/* instanz */
+static tap xtap_state = {
+  .is_press_action = true,
+  .state = 0
+};
+
+
+void dance_capslock_finished (tap_dance_state_t *state, void *user_data) {
+xtap_state.state = cur_dance(state);
+  switch (xtap_state.state) {
+    case SINGLE_TAP: register_code(KC_ESC); break;
+    case SINGLE_HOLD: layer_on(LAYER1); break;
+    case DOUBLE_HOLD: layer_on(LAYER1); register_code(KC_LSFT); break;
+    case TRIPLE_HOLD: layer_on(LAYER1); register_code(KC_LCTL); break;
+    case QUAD_HOLD:   layer_on(LAYER1); register_code(KC_LSFT); register_code(KC_LCTL);
+  }
+}
+
+void dance_capslock_reset (tap_dance_state_t *state, void *user_data) {
+switch (xtap_state.state) {
+    case SINGLE_TAP: unregister_code(KC_ESC); break;
+    case SINGLE_HOLD: layer_off(LAYER1); break;
+    case DOUBLE_HOLD: layer_off(LAYER1); unregister_code(KC_LSFT); break;
+    case TRIPLE_HOLD: layer_off(LAYER1); unregister_code(KC_LCTL); break;
+    case QUAD_HOLD: layer_off(LAYER1); unregister_code(KC_LSFT); unregister_code(KC_LCTL);
+  }
+  xtap_state.state = 0;
+}
+
+
+
+
+//Tap Dance Definitions
+tap_dance_action_t tap_dance_actions[] = {
+  //Tap once for Esc, twice for Caps Lock
+  [TD_COMM_EQL]  = ACTION_TAP_DANCE_DOUBLE(KC_COMM, DE_EQL),
+  [TD_CAPS] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, dance_capslock_finished, dance_capslock_reset),
+  [TD_END] = ACTION_TAP_DANCE_DOUBLE(KC_QUOT, KC_END)
+// Other declarations would go here, separated by commas, if you have them
+};
+
+const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
+
+	[KM_QWERTY] = LAYOUT(
+		KC_ESC, KC_1, KC_2, KC_3, KC_4, KC_5, KC_6, KC_7, KC_8, KC_9, KC_0, KC_MINS, KC_EQL, KC_NO, KC_BSPC,
+		KC_TAB, KC_Q, KC_W, KC_E, KC_R, KC_T, KC_Y, KC_U, KC_I, KC_O, KC_P, KC_LBRC, KC_RBRC, KC_BSLS,
+		LT(LAYER1,KC_ESC), LT(F_ROW,KC_A), KC_S, KC_D, KC_F, KC_G, KC_H, KC_J, KC_K, KC_L, LT(LAYER2,KC_SCLN), TD(TD_END), CTL_T(KC_ENT),
+		SC_LSPO, KC_NUBS, KC_Z, KC_X, KC_C, KC_V, KC_B, KC_N, KC_M, KC_COMM, KC_DOT, KC_SLSH, SC_RSPC, KC_NO,
+		KC_LCTL, KC_LGUI, KC_LALT, LT(MISC1, KC_INS), LT(MISC2,KC_DEL), KC_SPC, KC_RALT, KC_LEFT, KC_DOWN, KC_UP, KC_RGHT),
+
+	[GAMING] = LAYOUT(
+		KC_ESC, KC_1, KC_2, KC_3, KC_4, KC_5, KC_6, KC_7, KC_8, KC_9, KC_0, KC_MINS, KC_EQL, KC_NO, KC_BSPC,
+		KC_TAB, KC_Q, KC_W, KC_E, KC_R, KC_T, KC_Y, KC_U, KC_I, KC_O, KC_P, KC_LBRC, KC_RBRC, KC_BSLS,
+		_______, KC_A, KC_S, KC_D, KC_F, KC_G, KC_H, KC_J, KC_K, KC_L, KC_SCLN, TD_END, CTL_T(KC_ENT),
+		KC_LSFT, KC_NUBS, KC_Z, KC_X, KC_C, KC_V, KC_B, KC_N, KC_M, KC_COMM, KC_DOT, KC_SLSH, KC_RSFT, KC_NO,
+		KC_LCTL, KC_LGUI, KC_LALT, KC_SPC, KC_SPC, KC_SPC, KC_RALT, KC_LEFT, KC_DOWN, KC_UP, KC_RGHT),
+
+	[MISC1] = LAYOUT(
+		KC_GRV, KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_F11, KC_F12, KC_TRNS, _______,
+		KC_TRNS, UG_TOGG, UG_NEXT, UG_HUEU, UG_HUED, UG_SATU, UG_SATD, KC_7, KC_8, KC_9, KC_0, _______, _______, _______,
+		KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_4, KC_5, KC_6, KC_TRNS, KC_TRNS, KC_TRNS,
+		KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, BL_DOWN, BL_TOGG, BL_UP, BL_STEP, KC_1, KC_2, KC_3, KC_TRNS, KC_TRNS, KC_TRNS,
+		KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_0, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS),
+
+	[MISC2] = LAYOUT(
+		QK_BOOT, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
+		KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_MPLY, KC_MNXT, KC_MPRV, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
+		KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_MUTE, KC_VOLU, KC_VOLD, KC_TRNS, KC_TRNS, KC_TRNS,
+		KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
+		KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS),
+
+  [LAYER1] = LAYOUT( \
+    KC_GRV, KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_F11, KC_F12,_______,_______, \
+    _______,LSFT(KC_1),LSFT(KC_2),LSFT(KC_3),LSFT(KC_4),LSFT(KC_5),LSFT(KC_6),LSFT(KC_7),LSFT(KC_8),LSFT(KC_9),LSFT(KC_0), LSFT(KC_MINS), LSFT(KC_EQL), LSFT(KC_NO),   \
+    _______,_______,_______,_______,_______,_______,KC_LEFT,KC_DOWN,KC_UP, KC_RGHT ,KC_BSPC,DE_EQL ,        TG(GAMING),   \
+    _______,_______,_______,_______,_______,_______,_______,_______,_______,_______,_______,_______,KC_UP,_______,   \
+    _______,_______,_______,_______,_______,_______,_______,                        _______,KC_LEFT,KC_DOWN  ,KC_RGHT  ),
+
+  /* Layer 2: Homerow ArrowKeys */
+  [LAYER2] = LAYOUT( \
+    KC_GRV, KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_F11, KC_F12,_______,_______, \
+    _______,LSFT(KC_1),LSFT(KC_2),LSFT(KC_3),LSFT(KC_4),LSFT(KC_5),LSFT(KC_6),LSFT(KC_7),LSFT(KC_8),LSFT(KC_8),LSFT(KC_0), LSFT(KC_MINS), LSFT(KC_EQL), LSFT(KC_NO),   \
+    _______,DE_LABK,DE_RABK,DE_LCBR,DE_RCBR,DE_LBRC,DE_RBRC,KC_HOME,KC_END,KC_DEL  ,_______,_______,        _______,   \
+    _______,_______,_______,_______,_______,_______,_______,DE_GRV,DE_QUOT,_______,_______,_______,_______,_______,   \
+    _______,_______,_______,_______,_______,_______,_______,                        _______,_______,_______  ,_______  ),
+
+
+ 	[F_ROW] = LAYOUT(
+		KC_ESC, KC_1, KC_2, KC_3, KC_4, KC_5, KC_6, KC_7, KC_8, KC_9, KC_0, KC_MINS, KC_EQL, KC_NO, KC_BSPC,
+		KC_TAB, KC_Q, KC_W, KC_E, KC_R, KC_T, KC_Y, KC_F7, KC_F8, KC_F9, KC_F10, KC_LBRC, KC_RBRC, KC_BSLS,
+		_______, KC_A, KC_S, KC_D, KC_F, KC_G, KC_H, KC_F4, KC_F5, KC_F6, KC_F11, TD_END, CTL_T(KC_ENT),
+		KC_LSFT, KC_NUBS, KC_Z, KC_X, KC_C, KC_V, KC_B, KC_N, KC_F1, KC_F2, KC_F3, KC_F12, KC_RSFT, KC_NO,
+		KC_LCTL, KC_LGUI, KC_LALT, KC_SPC, KC_SPC, KC_SPC, KC_RALT, KC_LEFT, KC_DOWN, KC_UP, KC_RGHT),
+
+};
+
+enum function_id {
+    SHIFT_ESC,
+};
+
+/*
+const uint16_t PROGMEM fn_actions[] = {
+  [0]  = ACTION_FUNCTION(SHIFT_ESC),
+};
+
+void action_function(keyrecord_t *record, uint8_t id, uint8_t opt) {
+  static uint8_t shift_esc_shift_mask;
+  switch (id) {
+    case SHIFT_ESC:
+      shift_esc_shift_mask = get_mods()&MODS_CTRL_MASK;
+      if (record->event.pressed) {
+        if (shift_esc_shift_mask) {
+          add_key(KC_GRV);
+          send_keyboard_report();
+        } else {
+          add_key(KC_ESC);
+          send_keyboard_report();
+        }
+      } else {
+        if (shift_esc_shift_mask) {
+          del_key(KC_GRV);
+          send_keyboard_report();
+        } else {
+          del_key(KC_ESC);
+          send_keyboard_report();
+        }
+      }
+      break;
+  }
+}
+*/
