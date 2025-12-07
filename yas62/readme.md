@@ -9,6 +9,9 @@ yas62_old.7z
 
 Pfad: /keyboards/yas62/
 Konfiguration: all in keyboard.json
+ACHTUNG:  
+Zeile 3 und 4 haben Lücken/andere Reihenfolge der Columns.  
+Siehe original Messung der Matrix unten (LAYOUT_all)  
 
 Siehe: https://docs.qmk.fm/porting_your_keyboard_to_qmk
 
