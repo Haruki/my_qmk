@@ -1,4 +1,5 @@
 # yas62
+MCU: ATmega32a
 
 ACHTUNG:  
 Dies ist nicht nur eine Keymap, sondern ein komplett neues PCB, welches so nicht im QMK Repository existiert.  
