@@ -1,4 +1,7 @@
  # Keymap für LFKeyboards LFK87
+ Rev E 
+ Siehe Fotos: 12.09.2018
+
 Kaymap Name: haruki
 
 Pfad:
@@ -11,3 +14,5 @@ Base Github: https://github.com/lfkeyboards/qmk_firmware.git
 
 qmk_firmware/keyboards/lfkeyboards/lfk87/keymaps/haruki
 
+Build Command: 
+./util/docker_build.sh -kb lfkeyboards/lfk87/reve:haruki
