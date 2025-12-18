@@ -1,4 +1,4 @@
-# Keymap für JC65 PCB
+# Keymap für JC65 PCB (RAMA M65A JC65 PS2AVRGB)
 Kaymap Name: haruki
 
 Pfad:
